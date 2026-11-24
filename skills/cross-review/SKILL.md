@@ -1,61 +1,75 @@
 ---
 name: cross-review
-description: Use after a plan is written or a task passes done-check, before commit or merge. Gets an independent review from a different AI model (Codex reviews Claude's work, Claude reviews Codex's work) and processes the findings.
+description: Use after verify-spec, after fixing review findings, or on a risky spec before coding. Gets an independent review from the OTHER AI model (Codex reviews Claude's work, Claude reviews Codex's) in a fresh context, records findings in plan/context/findings.md and a receipt in plan/context/review.md.
 ---
 
 # Cross-model review
 
-The model that wrote the code shares its own blind spots. Get the review from the **other** agent, in a fresh context.
+The builder never reviews its own work and calls it independent. The other lab's model, in a fresh context, does.
 
-## 1. Run the review
+## Scope
+
+- **diff** (default): the active work item: branch changes since the merge base, staged/unstaged edits, untracked source files, and nearby callers.
+- **plan**: the spec in `plan/context/current.md` before coding.
+- **full** or a path: on request.
+
+## 1. Prepare the request (builder)
+
+1. Make sure the work to review is committed. If not, show the diff and ask for a checkpoint commit (needs the user's yes). The receipt is tied to one commit.
+2. Write the request into `plan/context/review.md`: scope, commit SHA, spec path, date, status `pending`.
+
+## 2. Run the reviewer (the other agent)
 
 If you are Claude Code, the reviewer is Codex:
 
 ```bash
-# diff review (read-only)
-codex exec review --base main
-codex exec review --uncommitted
-
-# adversarial brief
-codex exec "Review the diff vs main against <spec path> and the Review guidelines in AGENTS.md. \
-Try to break it. For each finding: severity P0/P1/P2, file:line, a failing scenario, the smallest fix. \
-Real defects only, no style. End with PASS or ISSUES."
-
-# plan review (before coding)
-codex exec "Read <spec> and <plan>. List missing edge cases, race conditions, security holes and \
-tasks that are too big. Do not write code. End with PASS or ISSUES."
+codex exec "You are an independent senior reviewer. Read-only: do not edit files.
+Scope: git diff <merge-base>..<sha> plus nearby callers. Spec: plan/context/current.md.
+Rules: AGENTS.md 'Review guidelines'. Existing ledger: plan/context/findings.md (do not just re-check it; review fresh).
+Lenses: correctness vs spec, security (authz, user scoping, input trust, injection, secrets),
+performance (N+1, unbounded work, races), tests (gaps, weak asserts, skips, mocks of the unit under test).
+For each finding: severity P0-P3, file:line, why it matters, a failing scenario, the smallest fix.
+Real defects only, no style. End with: VERDICT: PASS or VERDICT: CHANGES."
 ```
+
+Quick alternative for diff scope: `codex exec review --base <base-branch>`.
 
 If you are Codex, the reviewer is Claude Code:
 
 ```bash
-claude -p "Review the git diff vs main against <spec path> and AGENTS.md review rules. \
-Read-only, do not edit files. Findings as severity P0/P1/P2, file:line, failing scenario, smallest fix. \
-End with PASS or ISSUES."
+claude -p "<same brief as above>"
 ```
 
-If the other CLI is not installed, say so and stop. Do not review your own work and call it a cross-review.
+If the other CLI is not installed or not logged in, stop and tell the user. Do not fall back to self-review.
 
-## 2. Process the findings
+## 3. Record
 
-For each finding:
+1. Add each finding to `plan/context/findings.md`:
 
-1. Decide if it is valid. Explain why in one line.
-2. Valid: write a failing test that shows the bug, then fix it (`tdd-build`).
-3. Invalid: explain why and leave it.
+```markdown
+### F-04 · P1 · open · Missing ownership check on getInvoice
+- File: src/app/invoices/[id]/page.tsx:18
+- Found: 2026-11-24 by codex (diff review @ e4f5g6h)
+- Why: any logged-in user can open another user's invoice by ID
+- Fix: scope the query by business_id of the session user
+- Resolution:
+```
 
-## 3. Repeat
+2. Next free ID (F-01, F-02...). Never reuse or renumber.
+3. Re-checked findings: `fixed` → `closed` only when the review covered that file and confirms the fix with no new defect. Wrong findings → `invalid` with a reason.
+4. Write the receipt into `review.md`: reviewer (codex / claude), scope, commit SHA, verdict, counts by severity.
 
-Re-run the review until PASS with no P0/P1. Stop after 3 rounds and hand the disagreement to the user.
+## 4. Act
 
-## Severity
+For each new finding: say whether it is valid and why (reviewers hallucinate too).
+- valid P0/P1 → add a build step to the spec, fix it test-first with `implement-spec`, mark `fixed`, then run cross-review again.
+- invalid → mark `invalid` with the reason.
+- the user may mark a finding `accepted`; you never do.
 
-- P0: wrong data or money, data loss, security or cross-user access, broken invariant. Blocks merge.
-- P1: missing validation, fake or weak test, unhandled error path, secrets or PII in logs. Fix before merge.
-- P2: readability and small refactors. Optional.
+Stop after 3 rounds of disagreement and let the user decide.
 
 ## Gotchas
 
-- Reviewers hallucinate too. Findings are input, not orders.
-- Give the reviewer the spec, otherwise it reviews against its own idea of the feature.
-- Ask for real defects only. Style is the linter's job.
+- A receipt is valid only for its commit. Any new commit makes it stale.
+- Never paste secrets into findings. Report category and location only.
+- A focused review (one lens) is labelled as partial. Missing tools are gaps, not passes.
