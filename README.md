@@ -1,80 +1,147 @@
-# said-agent-skills
+# agent-skills
 
-My personal, spec-driven workflow for Claude Code and Codex: one feature at a time, file-backed state, test-first builds, and an independent review by the other AI model before anything merges.
+**Ship real software with AI, one feature at a time.**
+Spec → build → verify → cross-model review → finish. Then secure, SEO and release.
+17 one-word skills for **Claude Code** and **Codex** (and any agent that reads `SKILL.md`).
 
-Works in any agent that reads the open `SKILL.md` format.
+---
 
-## Install
+## Quick start
 
 ```bash
-# all skills, globally, into Claude Code and Codex
+# 1. install the skills (once, global)
 npx skills add saidmounaim/agent-skills --all -g
 
-# only some skills
-npx skills add saidmounaim/agent-skills --skill feature-spec --skill cross-review -g -a claude-code -a codex
+# 2. inside your app (already scaffolded, git repo)
+/setup        # creates plan/ and AGENTS.md rules
+/discover     # interview → project plan + build plan
 
-# see what is in the repo
-npx skills add saidmounaim/agent-skills --list
+# 3. build features, one at a time
+/spec  →  approve  →  /build  →  /verify  →  /audit  →  /finish
+
+# 4. ship
+/secure  →  /seo  →  /release
+
+# lost? any time, any session
+/next
 ```
 
-Replace `saidmounaim/agent-skills` with wherever you push this repo (private repos work with your Git/`gh` login).
-Manual install: copy each `skills/<name>` folder into `~/.claude/skills/` (Claude Code) and `~/.agents/skills/` (Codex).
-After editing a skill, run the install command again.
+In Codex, use `$name` instead of `/name` (or `/skills`). You can also just describe what you want; skills load from their descriptions.
+
+---
 
 ## The loop
 
-```
-workflow-init → project-discovery → [ feature-spec → (you approve) → implement-spec → verify-spec → cross-review → complete-feature ] → next item
-                                       debug-isolate → feature-spec (fix mode)        build-status: where am I, what's next?
+```mermaid
+flowchart LR
+  A[/setup/] --> B[/discover/]
+  B --> C[/spec/]
+  C -->|you approve| D[/build/]
+  D --> E[/verify/]
+  E --> F[/audit/]
+  F -->|P0/P1 found| D
+  F -->|PASS| G[/finish/]
+  G -->|next item| C
+  G -->|all done| H[/secure/]
+  H --> I[/seo/]
+  I --> J[/release/]
 ```
 
-| Skill | What it does | Writes |
-| --- | --- | --- |
-| `workflow-init` | Installs the `plan/` folder, templates and AGENTS.md rules | `plan/**`, AGENTS.md |
-| `project-discovery` | Interviews you to fill the two plans; generates the overview | project-plan, build-plan, overview |
-| `feature-spec` | Next build-plan item (or a bug) → one reviewed spec with small, test-first steps | `context/current.md` |
-| `implement-spec` | Builds the spec step by step, test first, on its branch; resumes from checkboxes | code, ticks steps |
-| `verify-spec` | Proves every "Done when" with real evidence; writes "Try it now" | Verification section |
-| `cross-review` | The other model reviews in a fresh context; findings ledger + receipt | `findings.md`, `review.md` |
-| `complete-feature` | Final gates, archive, tick build plan, one commit, merge only with your yes | `history/**` |
-| `debug-isolate` | Reproduces and finds the root cause without editing code | debug report |
-| `build-status` | Read-only progress, blockers, drift, next command | nothing |
-| `money-minor-units` | Rules for money, tax, rounding and invoice totals | (domain rules) |
-| `skill-harvest` | Adds a new skill from someone else's idea, in your own words | `skills/**`, CREDITS |
+**Claude builds, Codex reviews** (or the other way round). The reviewer is always the other model, in a fresh context.
 
-## Project files (created by workflow-init)
+---
+
+## Skills
+
+### Plan
+| Skill | What it does |
+| --- | --- |
+| `/setup` | Adds the `plan/` folder, templates and AGENTS.md rules to your app |
+| `/discover` | Interviews you, writes the project plan, build plan and overview |
+| `/spec` | Next build-plan item (or a bug, in fix mode) → one reviewed spec with test-first steps |
+
+### Build
+| Skill | What it does |
+| --- | --- |
+| `/build` | Builds the spec step by step, test first, on its own branch. Resumes where it stopped |
+| `/tests` | Sets up a test runner (Vitest) or browser tests (Playwright) with one real test |
+| `/ci` | One `verify` command, same locally and in GitHub Actions |
+
+### Prove
+| Skill | What it does |
+| --- | --- |
+| `/verify` | Proves every "Done when" with real evidence. Writes a "Try it now" guide |
+| `/audit` | The other AI model reviews the work. Findings ledger + receipt tied to a commit |
+| `/finish` | Final gates, archive, tick the build plan, one commit, merge only with your yes |
+
+### Ship
+| Skill | What it does |
+| --- | --- |
+| `/secure` | Full security pass: auth, permissions, input, secrets, dependencies, headers |
+| `/seo` | Metadata, sitemap, robots, Open Graph, JSON-LD, Core Web Vitals |
+| `/release` | Deploy readiness: env vars, migrations, changelog, version, rollback plan. Never deploys itself |
+
+### Help
+| Skill | What it does |
+| --- | --- |
+| `/next` | Where am I, what's blocked, what to run next |
+| `/explain` | Walks you through a feature, a flow or a file (read-only) |
+| `/diagnose` | Reproduces a bug and finds the root cause, without editing code |
+| `/money` | Rules for money, tax, rounding and invoice totals (integer cents) |
+| `/skillify` | Turns someone else's skill or idea into a new skill here, in your own words |
+
+---
+
+## What gets added to your app
 
 ```
 plan/
-  project-plan.md     you own it: problem, users, data, stack, deploy, constraints
-  build-plan.md       you own it: ordered checklist, stable IDs, never renumbered
-  context/
-    overview.md       generated context, read in slices
-    current.md        the ONE active spec
-    findings.md       F-01.. ledger: P0-P3, open/fixed/closed/accepted/invalid
-    review.md         cross-review request + receipt tied to a commit
-  history/
-    features/         archived specs (4-draft-invoices.md)
-    fixes/
+├── project-plan.md      ← you own it: problem, users, data, stack, deploy
+├── build-plan.md        ← you own it: ordered features, stable IDs
+├── context/
+│   ├── overview.md      ← generated context
+│   ├── current.md       ← the ONE active spec
+│   ├── findings.md      ← F-01… P0–P3, open → fixed → closed
+│   └── review.md        ← latest review receipt
+├── history/             ← finished features and fixes
+└── releases/            ← release checklists
+AGENTS.md                ← rules every agent follows
 ```
 
-Because state lives in files, you can stop any time and continue in a fresh session, or switch between Claude Code and Codex. Start with `build-status`.
+State lives in files, not chat. Stop any time, switch between Claude Code and Codex, and run `/next` to pick up.
 
-## Hard rules (in every skill)
+---
 
-- One active spec. Nothing gets built unless it is in the spec.
-- Never on `main`. Never commit, merge or push without your explicit yes.
-- Tests first; existing tests are never weakened to pass.
-- No claimed result without real command output.
-- Open or fixed P0/P1 findings block completion. Only you can accept a finding.
-- The reviewer is always the other model.
+## Rules every skill follows
 
-## Use
+1. One active spec. Nothing is built that isn't in it.
+2. Tests first. Existing tests are never weakened to pass.
+3. No claimed result without real command output.
+4. Never on `main`. Never commit, merge, push or deploy without your explicit yes.
+5. Open P0/P1 findings block finishing. Only you can accept a finding.
+6. The reviewer is always the other model.
 
-- Claude Code: `/feature-spec`, or describe the task and the skill loads from its description.
-- Codex: `$feature-spec`, or `/skills`.
+---
 
-## Grow it
+## Example: invoice app
 
-"Use skill-harvest to make a skill from <link or idea>." Commit, push, reinstall.
-Project-only rules (e.g. invoice numbering) go in that project's `.claude/skills/` and `.agents/skills/`, not here.
+```
+/setup
+/discover          → build plan: 1 Money core · 2 Auth · 3 Clients · 4 Drafts · 5 Issue + numbering · 6 PDF · 7 Payments
+/tests  /ci
+/spec              → "1. Money core" spec: integer cents, half-up per line, 30+ table tests
+/build  /verify  /audit  /finish
+... repeat for 2–7 ...
+/secure  /seo  /release
+```
+
+---
+
+## Customize
+
+- Edit any `skills/<name>/SKILL.md`, push, and run the install command again.
+- Add a skill: `/skillify <link or idea>`.
+- Project-only rules go in that project's `.claude/skills/` and `.agents/skills/`.
+- When an agent makes the same mistake twice, add a line to that skill's **Gotchas**.
+
+Credits: see [CREDITS.md](CREDITS.md). Inspired by AI Blueprint (MIT), Superpowers (MIT) and the Hacker News community. License: MIT.

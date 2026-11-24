@@ -11,4 +11,6 @@ These skills are written from scratch. The ideas behind them come from:
 | Cross-model review (one lab writes, another reviews); mutation check on tests | Hacker News threads on AI coding workflows, 2025-2026 | n/a |
 | Codex review commands and AGENTS.md review guidelines | [OpenAI Codex docs](https://developers.openai.com/codex/skills) | n/a |
 
+`/release`, `/seo`, `/secure`, `/explain`, `/tests` and `/ci` take their scope ideas from AI Blueprint's release, tests, ci, brief and audit commands, Next.js metadata docs, and common OWASP practice; the wording is original.
+
 What this collection changes from AI Blueprint: the independent reviewer is always the other lab's model (Codex ↔ Claude); build steps are test-first with a mutation check; a separate money-rules skill; no runtime CLI, dashboard or config.json (pure markdown skills).
