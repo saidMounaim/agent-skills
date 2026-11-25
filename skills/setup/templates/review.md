@@ -1,5 +1,5 @@
-# Cross-review
+# Review receipt
 
-> Written by `audit`. A receipt is valid only for the commit it names. New commits = stale receipt = review again.
+> Written by `audit`. A receipt covers one commit. It stays valid while nothing outside `plan/` has changed since that commit.
 
 <!-- no review yet -->

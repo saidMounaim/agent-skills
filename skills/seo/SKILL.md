@@ -1,44 +1,48 @@
 ---
 name: seo
-description: Use to audit or improve SEO for public pages (marketing site, landing page, blog, docs, public profiles): metadata, sitemap, robots, Open Graph, structured data, performance and indexing. Use before a public launch or when the user mentions SEO, Google, ranking or share previews. Skip for pages behind login.
+description: Use to check or improve search and sharing for public web pages (landing page, marketing site, blog, docs, public profiles) in any framework: titles, descriptions, sitemap, robots, share previews, structured data, speed and indexing. Use before a public launch or when the user mentions SEO, Google, ranking or link previews. Not for pages behind login or for non-web apps.
 ---
 
 # SEO
 
-## 1. Map the public surface
+Report first. Fixes go through `spec` (fix mode).
 
-List public routes (exclude app pages behind auth, which should be `noindex`). For each: title, description, canonical, indexable? Ask the user for target keywords and the main audience/language if not in `plan/project-plan.md`.
+## 1. Map the public pages
 
-## 2. Audit (report first, then fix through a spec)
+List every public route. Pages behind login must be `noindex`. Ask for the target keywords, audience and languages if `plan/project-plan.md` does not say.
 
-**Technical**
-- `robots.txt` exists, allows public pages, blocks app/admin/API, points to the sitemap.
-- `sitemap.xml` lists every public, canonical URL (Next.js: `app/sitemap.ts`, `app/robots.ts`).
-- One canonical URL per page; `www`/non-`www` and trailing slash handled by a redirect.
-- Correct status codes: real 404 page, 301 for moved pages, no soft 404s.
-- Pages render meaningful HTML on the server (view source shows the content).
+## 2. Check
 
-**On-page**
-- Unique `<title>` (about 50-60 chars) and meta description (about 150-160) per page. Next.js: `metadata` / `generateMetadata`, with a `title.template` in the root layout.
-- One `<h1>`, logical heading order, descriptive link text, `alt` on meaningful images.
-- `lang` on `<html>`; `hreflang` alternates if the site has FR/AR/EN versions (and `dir="rtl"` for Arabic).
+**Crawling**
+- `robots.txt` allows public pages, blocks app, admin and API routes, and names the sitemap.
+- `sitemap.xml` lists every public page once, by its canonical URL.
+- One canonical URL per page; `www` and trailing-slash variants redirect.
+- Real 404 page, 301 for moved pages.
+- The page's HTML already contains its content (view source). If the framework renders only in the browser, public pages need server rendering or pre-rendering.
+
+**On the page**
+- Unique title (about 50-60 characters) and description (about 150-160) on every page.
+- One `h1`, headings in order, descriptive link text, `alt` on meaningful images.
+- `lang` on the `html` element. `hreflang` for each language version; `dir="rtl"` for right-to-left languages.
 
 **Sharing**
-- Open Graph and Twitter card tags; a 1200×630 OG image per key page (Next.js `opengraph-image.tsx` can generate them).
+- Open Graph and Twitter card tags. A 1200×630 image for key pages.
 
-**Structured data**
-- JSON-LD where it fits: `Organization` and `WebSite` on home, `SoftwareApplication` or `Product` for a SaaS, `Article` for posts, `FAQPage` only for real FAQs, `BreadcrumbList` for deep pages. Validate the JSON shape.
+**Structured data** (JSON-LD, only where it is true)
+- `Organization` and `WebSite` on the home page, `SoftwareApplication` or `Product` for a product, `Article` for posts, `BreadcrumbList` for deep pages, `FAQPage` only for a real FAQ.
 
-**Performance (Core Web Vitals)**
-- Run Lighthouse (`npx lighthouse <url> --only-categories=performance,seo,accessibility --output=json`) if available, against a production build, not dev.
-- Usual fixes: `next/image` with sizes, `next/font`, no layout shift from late banners, lazy third-party scripts, small JS on landing pages.
+**Speed**
+- Run Lighthouse or a similar tool against a production build, never a dev server.
+- Usual fixes: sized and compressed images, fonts that do not shift the layout, less script on landing pages, third-party scripts loaded late.
 
-## 3. Output
+Use the framework's own way of doing each item (its metadata API, sitemap and robots helpers, image component). Look it up in the framework's docs rather than hand-writing tags.
 
-A table: issue, page, impact (high/med/low), fix. Then offer to turn the high-impact items into one `spec` (fix mode) and build it. Add a `## Smoke test` line to the next release: check the live `robots.txt`, `sitemap.xml` and one OG preview.
+## 3. Report
+
+A table: issue, page, impact (high, medium, low), fix. Offer to turn the high-impact items into one `spec`. Add to the next release's smoke test: live `robots.txt`, `sitemap.xml`, and one share preview.
 
 ## Gotchas
 
-- Do not stuff keywords or generate thin pages; it hurts more than it helps.
-- `noindex` the app, staging and preview deployments (check `X-Robots-Tag` or metadata on preview URLs).
-- Submitting the sitemap in Google Search Console is a step the user does; give them the URL.
+- No keyword stuffing and no thin generated pages.
+- Staging and preview deployments must be `noindex`.
+- Submitting the sitemap to search consoles is the user's step. Give them the URL.

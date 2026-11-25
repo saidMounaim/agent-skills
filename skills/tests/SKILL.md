@@ -1,34 +1,42 @@
 ---
 name: tests
-description: Use when a project has no test runner, a broken one, or needs browser (end-to-end) tests. Sets up unit tests (Vitest by default) or Playwright, with one real passing test, and wires them into the Verify command. Not for writing feature tests, which happen in build.
+description: Use when a project has no test runner, a broken one, or needs end-to-end tests (tests e2e). Sets up the runner that fits the stack with one real passing test and adds it to the Commands table. Not for writing feature tests, which happen in build.
 ---
 
 # Tests
 
-## Modes
+## Unit tests (default)
 
-- `tests` (default): unit/integration runner.
-- `tests browser`: Playwright end-to-end.
+1. Check what exists. If a runner already works, say so and stop.
+2. Pick the stack's standard runner. If the repo already uses one, keep it.
 
-## Unit (default)
+| Stack | Runner |
+| --- | --- |
+| Node / TypeScript | Vitest (Jest if already present) |
+| Python | pytest |
+| Go, Rust | built in (`go test`, `cargo test`) |
+| PHP | Pest or PHPUnit |
+| Ruby | RSpec or Minitest |
+| Java / Kotlin | JUnit 5 |
+| .NET | xUnit |
+| Flutter / Dart | `flutter test` |
+| Elixir | ExUnit |
 
-1. Detect what exists (package.json scripts, config files). If a runner already works, stop and say so.
-2. Pick the runner that fits the stack: Vitest for Vite/Next.js/TS, Jest only if the repo already uses it, pytest for Python. Ask before adding a dependency.
-3. Install, add config, and add scripts: `test` (run once) and `test:watch`.
-4. Write **one real test** against existing logic (a pure function), not `expect(true).toBe(true)`.
-5. Run it and paste the output. Then run the mutation check: break the function, show the test fails, restore.
-6. Add the test command to the Verify command in AGENTS.md.
+3. Ask before adding a dependency. Install it, add the config, add `test` to the project's scripts.
+4. Write **one real test** of existing logic. Not a placeholder.
+5. Run it and paste the output. Break the code on purpose, show the test fails, restore it.
+6. Fill the `test` row in the AGENTS.md Commands table and add it to `verify`.
 
-## Browser
+## End-to-end (`tests e2e`)
 
-1. Install Playwright (`pnpm create playwright` or equivalent), Chromium only to start.
-2. Configure `webServer` in `playwright.config.ts` so tests start the app themselves.
-3. Write one smoke test: open the home page, assert a real heading, and one key flow if it exists (log in, open dashboard).
-4. Add `e2e` script and add it to Verify (or to CI only, if it is slow; say which).
-5. Run and paste the output.
+1. Web, any backend → Playwright. Mobile → the platform's tool (Maestro, Flutter `integration_test`, XCUITest, Espresso); ask which.
+2. Configure it to start the app by itself.
+3. Write one smoke test: open the first screen, assert real content, and one key flow if it exists.
+4. Fill the `e2e` row. If it is slow, keep it out of `verify` and run it in CI; say which.
+5. Run it and paste the output.
 
 ## Gotchas
 
-- An empty suite or a placeholder test is not "tests set up".
-- Do not put secrets in test config. Use `.env.test` with fake values and add it to `.gitignore` if it holds anything real.
-- Keep test data isolated: a separate test database or transactions rolled back per test.
+- An empty suite or a placeholder test is not a test setup.
+- Tests get their own data: a test database, or transactions rolled back per test. Never the dev or production database.
+- No real secrets in test config.

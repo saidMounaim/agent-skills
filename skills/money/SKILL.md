@@ -1,33 +1,37 @@
 ---
 name: money
-description: Use whenever code stores, calculates, rounds, displays or tests money, prices, taxes (VAT/TVA), discounts or invoice totals. Also use when reviewing such code.
+description: Use whenever code stores, calculates, rounds, displays or tests money, prices, taxes (VAT, TVA, sales tax), discounts, or invoice and order totals, in any language. Also use when reviewing such code.
 ---
 
-# Money in minor units
+# Money
 
 ## Rules
 
-- Store every amount as an **integer in minor units** (cents, centimes). Never `float`, never `number` with decimals, never `toFixed` for math.
-- Quantities that can be fractional: integer thousandths (`qty_milli`). Rates: integer basis points (20% = `2000`).
-- Database: `bigint` / `integer` columns for amounts. Currency code (ISO 4217, e.g. `MAD`, `EUR`) stored next to every amount or on the parent record.
-- One currency per document. No silent conversion.
-- All money math lives in one pure module (e.g. `src/lib/money`). UI and API only call it.
-- Format for display only at the edge, with `Intl.NumberFormat(locale, { style: 'currency', currency })`.
+- Store every amount as an **integer in minor units** (cents, centimes), or in the language's exact decimal type (`Decimal`, `BigDecimal`, `NUMERIC` in SQL). Never binary floating point.
+- Fractional quantities: integer thousandths. Rates: integer basis points (20% = 2000).
+- Store the currency code (ISO 4217, such as `EUR`, `USD`, `MAD`) with every amount or on its parent record. Not every currency has 2 decimals (JPY has 0, KWD has 3).
+- One currency per document. No silent conversion. A converted amount stores the rate and the date used.
+- All money math lives in one pure module. Interfaces and endpoints only call it.
+- Format amounts for display at the edge only, with the platform's locale-aware formatter.
 
-## Rounding (default, change only if the user specifies)
+## Rounding
 
-- Round **half-up per line**, then sum lines for totals.
-- line_net = round(qty_milli × unit_price_minor / 1000) − discount
-- line_tax = round(line_net × rate_bp / 10000)
-- Document which rule is used in the spec and test it.
+Default, unless the user says otherwise: round **half-up per line**, then add the lines.
+
+- line net = round(quantity × unit price) − discount
+- line tax = round(line net × rate)
+- totals = sums of the rounded lines
+
+Write the rule in the spec and test it. Tax rules differ by country; ask which applies.
 
 ## Tests that must exist
 
-Table-driven tests including: 0, 1 minor unit, very large values, repeating decimals (3 × 0.333), 100% discount, 0% tax, mixed tax rates on one invoice, and a total that equals the sum of the rounded lines.
+Table-driven cases: zero, one minor unit, very large values, repeating decimals (3 × 0.333), 100% discount, 0% tax, several tax rates on one document, negative amounts (refunds, credit notes), and a total equal to the sum of its rounded lines.
 
 ## Gotchas
 
-- `0.1 + 0.2 !== 0.3`. If you see a decimal literal in money code, it is a bug.
-- `Math.round` rounds -2.5 to -2. Write an explicit half-up helper and test negatives (credit notes).
-- Totals computed in the browser and on the server will drift. Compute once, on the server, with the shared module.
-- Legal invoice fields (tax IDs, sequential numbers, tax per rate) vary by country. Ask the user; do not invent them.
+- 0.1 + 0.2 is not 0.3 in floating point. A float anywhere in money code is a bug.
+- Built-in rounding often surprises: banker's rounding in Python and .NET, and JavaScript rounds −2.5 to −2. Write an explicit rounding helper and test negatives.
+- Totals computed in two places drift apart. Compute once, on the server, and show that result.
+- Issued invoices and paid orders do not change. Corrections are new documents (credit note, refund).
+- Legal fields on invoices (tax IDs, sequential numbers, tax per rate) depend on the country. Ask the user; never invent them.

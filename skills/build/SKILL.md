@@ -1,45 +1,48 @@
 ---
 name: build
-description: Use to build the approved spec in plan/context/current.md, step by step and test-first, on the spec's branch. Also use to resume a half-built spec. Stops before the final commit and merge, which belong to finish.
+description: Use to implement the approved spec in plan/context/current.md, step by step and test-first, on the spec's branch. Also use to resume a half-built spec or to fix audit findings. Stops before the final commit and merge, which belong to finish.
 ---
 
-# Implement spec
+# Build
 
-## Preflight (one batch of reads)
+## Preflight
 
-- `plan/context/current.md`: must exist with **Status:** `approved` (or `in-progress` when resuming). Empty → run `spec`. Draft → ask the user to approve.
-- `git status`, current branch, recent log. Check out or create the spec's **Branch**. Never edit `main`/`master`. Keep any unrelated local changes untouched.
-- Resume: start at the first unchecked step. Use git status to tell finished from unfinished work; if a box and the code disagree, ask.
+- `plan/context/current.md` must hold a spec with **Status:** `approved` or `in-progress`, or any later status that still has unticked steps (a fix round after `audit`). Empty → `spec`. Draft → ask the user to approve it.
+- `git status`, current branch. Switch to the spec's **Branch**, creating it if needed. Never change app code on the default branch. Leave unrelated local changes alone.
+- Resuming: start at the first unticked step. If a ticked box and the code disagree, ask.
 - Set **Status:** `in-progress`.
 
-Do not re-read broad project docs: the spec already carries what you need. Look at the code for the current step only.
+The spec carries the context. Read code for the current step only.
 
-## Per step
+## For each step
 
-1. **Red**: write the step's test. Run it. Show it fails for the right reason (an assertion, not a typo or import error).
-2. **Green**: make the smallest change that meets the step's "Done when".
-3. Run the narrowest useful check (that test file, that package). Paste the output.
-4. Self-review the diff: contract matches the spec, permissions and user scoping, error handling, no stray edits.
-5. Tick the step's box only after its check passes.
-6. Report briefly: what changed, files, check output. Ask: continue, checkpoint commit (`feat: checkpoint <step>`, only if the user says yes), walk me through it, or stop.
+1. **Red.** Write the step's test. Run it. It must fail on its assertion, not on a typo or missing import.
+2. **Green.** Make the smallest change that meets the step's "Done when".
+3. Run the narrowest check that covers it (that test file or package). Paste the output.
+4. Read your own diff: matches the contract, checks permissions and ownership, handles errors, no stray edits.
+5. Tick the step.
+6. Report in a few lines: what changed, files, check output. Ask: continue, checkpoint commit (only with a yes), or stop.
 
-## Stop and ask instead of improvising when
+## Stop and ask when
 
-- a product decision is needed that the spec does not answer,
-- the step needs a new dependency, service or config the spec does not allow,
-- scope grows noticeably,
-- the same check fails 3 times.
-Propose a spec revision; do not just do it.
+- the spec does not answer a product decision,
+- a step needs a dependency, service or config the spec does not mention,
+- the work is growing beyond the spec,
+- the same check has failed 3 times.
+
+Propose a change to the spec. Do not improvise.
 
 ## After the last step
 
-1. Compare the full diff against every In-scope item and every "Done when". Remove speculative code that no requirement needs (but keep real validation and safety).
-2. Run the Verify command from AGENTS.md exactly once. Paste the real output. Repair in-scope failures only, then rerun.
-3. Set **Status:** `built`. Hand off with: branch, changes by area, checks run, open risks, and next step: `verify`.
+1. Compare the whole diff with In scope and every "Done when". Remove code no requirement needs. Keep validation and safety checks.
+2. Run `verify` from the AGENTS.md Commands table. Paste the real output. Fix failures that are in scope, then rerun.
+3. Set **Status:** `built`. Hand off: branch, what changed, checks run, open risks. Next: `verify`.
 
 ## Gotchas
 
 - Never edit, skip or weaken an existing test to make it pass. If a test is wrong, stop and ask.
-- Do not mock the function under test. Mock only edges (network, clock, email, payments).
-- For core logic, do a mutation check once: break the code on purpose, show the test fails, restore it.
-- You never merge, push or deploy in this skill.
+- Do not mock the unit under test. Mock only the edges: network, clock, email, payments.
+- For core logic, run one mutation check: break the code on purpose, show the test fails, restore it.
+- Database changes: write a migration, never edit the database by hand; say whether it can be rolled back.
+- UI: use the tokens and components in `design.md`. No new colors, fonts or spacing values.
+- No merge, push or deploy in this skill.

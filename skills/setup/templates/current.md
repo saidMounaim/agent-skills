@@ -1,1 +1,1 @@
-<!-- empty: no active feature. Run spec. -->
+<!-- empty: no active spec. Run spec. -->
