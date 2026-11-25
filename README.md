@@ -164,6 +164,63 @@ Tiny changes (a typo, a label) skip the loop: branch, change, verify, commit.
 - **One feature at a time.** Parallel features are not supported on purpose.
 - **Update:** edit a skill, push, run the install command again. Remove one with `npx skills remove <name> -g`.
 - **Project-only rules** go in that project's AGENTS.md Gotchas, or its own `.claude/skills/` and `.agents/skills/`.
+
+---
+
+## Managing skills
+
+### Remove all skills
+
+```bash
+# Claude Code (global)
+npx skills remove saidmounaim/agent-skills --skill '*' -a claude-code -g -y
+
+# Codex (global)
+npx skills remove saidmounaim/agent-skills --skill '*' -a codex -g -y
+
+# Both
+npx skills remove saidmounaim/agent-skills --skill '*' -a claude-code -a codex -g -y
+```
+
+### Install globally only (all machines, one command)
+
+```bash
+# Claude Code
+npx skills add saidmounaim/agent-skills --skill '*' -a claude-code -g -y
+
+# Codex
+npx skills add saidmounaim/agent-skills --skill '*' -a codex -g -y
+
+# Both
+npx skills add saidmounaim/agent-skills --skill '*' -a claude-code -a codex -g -y
+```
+
+### Install for one project only (no `-g` flag)
+
+Run this inside the project folder:
+
+```bash
+# Claude Code
+npx skills add saidmounaim/agent-skills --skill '*' -a claude-code -y
+
+# Codex
+npx skills add saidmounaim/agent-skills --skill '*' -a codex -y
+
+# Both
+npx skills add saidmounaim/agent-skills --skill '*' -a claude-code -a codex -y
+```
+
+Skills land in `.claude/skills/` and `.agents/skills/` inside the project. Commit those folders to share the setup with your team.
+
+### Remove from a single project
+
+```bash
+# Claude Code
+npx skills remove saidmounaim/agent-skills --skill '*' -a claude-code -y
+
+# Codex
+npx skills remove saidmounaim/agent-skills --skill '*' -a codex -y
+```
 - **Agent made the same mistake twice?** Add a line to that skill's Gotchas.
 - **Editing this repo:** run `scripts/check.sh` before you push.
 
