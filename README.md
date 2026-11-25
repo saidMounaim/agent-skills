@@ -14,7 +14,16 @@
 
 **1. Install the skills** (once per machine)
 
+Pick the agent(s) you use:
+
 ```bash
+# Claude Code only
+npx skills add saidmounaim/agent-skills --skill '*' -a claude-code -g -y
+
+# Codex only
+npx skills add saidmounaim/agent-skills --skill '*' -a codex -g -y
+
+# Both
 npx skills add saidmounaim/agent-skills --skill '*' -a claude-code -a codex -g -y
 ```
 
