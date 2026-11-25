@@ -162,7 +162,7 @@ Tiny changes (a typo, a label) skip the loop: branch, change, verify, commit.
 - **A skill name clashes** with another command you use? Rename its folder and the `name:` line.
 - **Working with screens?** Put them in `plan/references/` and run `/design`. `/spec` and `/verify` use them.
 - **One feature at a time.** Parallel features are not supported on purpose.
-- **Update:** edit a skill, push, run the install command again. Remove all with `npx skills remove saidmounaim/agent-skills --all -g`.
+- **Update:** edit a skill, push, run the install command again. Remove them with the commands in [Managing skills](#managing-skills).
 - **Project-only rules** go in that project's AGENTS.md Gotchas, or its own `.claude/skills/` and `.agents/skills/`.
 
 ---
@@ -171,15 +171,17 @@ Tiny changes (a typo, a label) skip the loop: branch, change, verify, commit.
 
 ### Remove all skills
 
+`skills remove` takes skill names, not the repo name. These commands remove only this repo's skills. (`npx skills remove --all` also works, but it removes **every** installed skill, including ones from other repos.)
+
 ```bash
 # Claude Code (global)
-npx skills remove saidmounaim/agent-skills --all -a claude-code -g -y
+npx skills remove audit build ci design diagnose discover explain finish money next release secure seo setup skillify spec tests verify -a claude-code -g -y
 
 # Codex (global)
-npx skills remove saidmounaim/agent-skills --all -a codex -g -y
+npx skills remove audit build ci design diagnose discover explain finish money next release secure seo setup skillify spec tests verify -a codex -g -y
 
 # Both
-npx skills remove saidmounaim/agent-skills --all -a claude-code -a codex -g -y
+npx skills remove audit build ci design diagnose discover explain finish money next release secure seo setup skillify spec tests verify -a claude-code -a codex -g -y
 ```
 
 ### Install globally only (all machines, one command)
@@ -216,11 +218,12 @@ Skills land in `.claude/skills/` and `.agents/skills/` inside the project. Commi
 
 ```bash
 # Claude Code
-npx skills remove saidmounaim/agent-skills --all -a claude-code -y
+npx skills remove audit build ci design diagnose discover explain finish money next release secure seo setup skillify spec tests verify -a claude-code -y
 
 # Codex
-npx skills remove saidmounaim/agent-skills --all -a codex -y
+npx skills remove audit build ci design diagnose discover explain finish money next release secure seo setup skillify spec tests verify -a codex -y
 ```
+
 - **Agent made the same mistake twice?** Add a line to that skill's Gotchas.
 - **Editing this repo:** run `scripts/check.sh` before you push.
 
